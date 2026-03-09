@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Grocery Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --gold:#C9A84C;--gold-light:#E8C97A;--dark:#0A0A0A;--panel:#111;
+  --card:#161616;--border:rgba(201,168,76,0.15);--warm:#FAF8F3;
+  --muted:rgba(250,248,243,0.45);--green:#4CAF7A;--red:#E05555;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Montserrat',sans-serif;background:var(--dark);color:var(--warm);overflow-x:hidden;}
+
+/* ── AUTH MODAL ── */
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:800;display:none;align-items:center;justify-content:center;}
+.auth-overlay.open{display:flex;}
+.auth-box{background:#141414;border:1px solid var(--border);padding:44px 36px;width:420px;position:relative;}
+.auth-close{position:absolute;top:14px;right:18px;background:none;border:none;color:var(--warm);font-size:20px;cursor:pointer;opacity:0.5;}
+.auth-close:hover{opacity:1;}
+.auth-tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid var(--border);}
+.auth-tab{flex:1;background:none;border:none;color:var(--muted);padding:12px;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.3s;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.auth-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.auth-logo{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--gold);letter-spacing:3px;text-align:center;margin-bottom:6px;}
+.auth-sub{font-size:10px;letter-spacing:3px;text-transform:uppercase;opacity:0.35;text-align:center;margin-bottom:28px;}
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+.a-group{margin-bottom:15px;}
+.a-label{display:block;font-size:10px;letter-spacing:3px;text-transform:uppercase;opacity:0.5;margin-bottom:7px;}
+.a-input{width:100%;background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.12);color:var(--warm);padding:12px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;}
+.a-input:focus{border-color:rgba(201,168,76,0.4);}
+.a-btn{width:100%;background:var(--gold);color:var(--dark);border:none;padding:14px;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:600;cursor:pointer;margin-top:8px;transition:background 0.3s;}
+.a-btn:hover{background:var(--gold-light);}
+.a-err{color:var(--red);font-size:11px;margin-top:10px;min-height:16px;}
+.a-switch{font-size:11px;opacity:0.4;text-align:center;margin-top:14px;}
+.a-switch span{color:var(--gold);cursor:pointer;opacity:1;}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;width:100%;z-index:200;background:rgba(10,10,10,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 48px;}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;letter-spacing:3px;color:var(--gold);cursor:pointer;}
+.nav-logo span{font-style:italic;color:var(--warm);}
+.nav-links{display:flex;gap:32px;list-style:none;}
+.nav-links a{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);text-decoration:none;cursor:pointer;transition:color 0.3s;position:relative;}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--gold);transition:width 0.3s;}
+.nav-links a:hover{color:var(--gold);}
+.nav-links a:hover::after{width:100%;}
+.nav-right{display:flex;gap:12px;align-items:center;}
+.nav-user{font-size:11px;opacity:0.5;letter-spacing:1px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.icon-btn{background:transparent;border:1px solid rgba(201,168,76,0.2);color:var(--gold);width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.3s;position:relative;}
+.icon-btn:hover{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.4);}
+.badge{position:absolute;top:-6px;right:-6px;background:var(--gold);color:var(--dark);width:18px;height:18px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.nav-auth-btn{background:none;border:1px solid rgba(201,168,76,0.3);color:var(--gold);padding:8px 20px;font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.3s;}
+.nav-auth-btn:hover{background:var(--gold);color:var(--dark);}
+.nav-logout{background:none;border:1px solid rgba(255,255,255,0.1);color:var(--warm);padding:8px 16px;font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;cursor:pointer;opacity:0.5;transition:all 0.3s;}
+.nav-logout:hover{opacity:1;border-color:var(--red);color:var(--red);}
+
+/* ── PAGES ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;padding:80px 60px 60px;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 65% 50%,rgba(201,168,76,0.08) 0%,transparent 60%),linear-gradient(135deg,#0A0A0A 0%,#1a1208 50%,#0A0A0A 100%);}
+.hero-grain{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");opacity:0.5;}
+.hero-content{position:relative;z-index:2;max-width:600px;}
+.hero-tag{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:22px;display:flex;align-items:center;gap:12px;opacity:0.9;}
+.hero-tag::before{content:'';width:36px;height:1px;background:var(--gold);}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(48px,6.5vw,90px);font-weight:300;line-height:1.05;margin-bottom:22px;}
+.hero-title em{font-style:italic;color:var(--gold);}
+.hero-sub{font-size:13px;font-weight:300;line-height:1.9;color:var(--muted);max-width:400px;margin-bottom:40px;}
+.hero-btns{display:flex;gap:16px;align-items:center;}
+.btn-gold{background:var(--gold);color:var(--dark);border:none;padding:14px 40px;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:500;cursor:pointer;transition:background 0.3s;}
+.btn-gold:hover{background:var(--gold-light);}
+.btn-ghost{background:none;border:none;color:var(--warm);font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;opacity:0.6;display:flex;align-items:center;gap:8px;transition:all 0.3s;}
+.btn-ghost:hover{opacity:1;gap:13px;}
+.btn-ghost::after{content:'→';font-size:15px;}
+.hero-stats{display:flex;gap:40px;margin-top:52px;}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold);}
+.stat-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:0.4;margin-top:2px;}
+
+/* ── MARQUEE ── */
+.marquee-wrap{border-top:1px solid rgba(201,168,76,0.1);border-bottom:1px solid rgba(201,168,76,0.1);background:rgba(201,168,76,0.03);padding:14px 0;overflow:hidden;}
+.marquee-track{display:flex;gap:50px;width:max-content;animation:marquee 24s linear infinite;}
+.mq-item{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);opacity:0.6;white-space:nowrap;display:flex;align-items:center;gap:18px;}
+.mq-item::after{content:'✦';font-size:7px;}
+@keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ── SHOP SECTION ── */
+.section{padding:80px 60px;}
+.sec-dark{background:var(--panel);}
+.sec-tag{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.sec-tag::before{content:'';width:26px;height:1px;background:var(--gold);}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,3.5vw,48px);font-weight:300;line-height:1.15;margin-bottom:14px;}
+.sec-title em{font-style:italic;color:var(--gold);}
+.sec-sub{font-size:12px;font-weight:300;line-height:1.9;color:var(--muted);max-width:440px;margin-bottom:36px;}
+
+/* ── CATEGORY CHIPS ── */
+.cat-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px;}
+.cat-chip{background:transparent;border:1px solid rgba(201,168,76,0.18);color:var(--warm);padding:8px 20px;font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.3s;}
+.cat-chip:hover,.cat-chip.active{background:var(--gold);border-color:var(--gold);color:var(--dark);}
+
+/* ── PRODUCT GRID ── */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;}
+.prod-card{background:var(--card);border:1px solid rgba(201,168,76,0.08);transition:all 0.4s;cursor:pointer;position:relative;overflow:hidden;}
+.prod-card:hover{border-color:rgba(201,168,76,0.35);transform:translateY(-5px);box-shadow:0 16px 48px rgba(0,0,0,0.4);}
+.prod-img{height:190px;display:flex;align-items:center;justify-content:center;font-size:58px;background:linear-gradient(135deg,rgba(201,168,76,0.05),rgba(201,168,76,0.02));position:relative;}
+.prod-badge{position:absolute;top:12px;left:12px;background:var(--gold);color:var(--dark);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;font-weight:600;}
+.prod-out-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#777;}
+.prod-body{padding:18px;}
+.prod-origin{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:0.8;margin-bottom:4px;}
+.prod-name{font-family:'Cormorant Garamond',serif;font-size:19px;margin-bottom:5px;}
+.prod-desc{font-size:11px;opacity:0.38;line-height:1.7;margin-bottom:14px;min-height:32px;}
+.prod-foot{display:flex;align-items:center;justify-content:space-between;}
+.prod-price{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--gold);}
+.prod-price small{font-size:11px;opacity:0.45;font-family:'Montserrat',sans-serif;}
+.prod-add-btn{background:transparent;border:1px solid rgba(201,168,76,0.3);color:var(--gold);width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:all 0.3s;}
+.prod-add-btn:hover{background:var(--gold);color:var(--dark);}
+.empty-prods{text-align:center;padding:80px 20px;opacity:0.3;grid-column:1/-1;}
+.empty-prods-icon{font-size:52px;margin-bottom:14px;}
+.empty-prods-txt{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;}
+
+/* ── CART SIDEBAR ── */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:400;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.cart-overlay.open{opacity:1;pointer-events:all;}
+.cart-panel{position:fixed;right:0;top:0;bottom:0;width:380px;background:#111;border-left:1px solid var(--border);z-index:401;transform:translateX(100%);transition:transform 0.4s ease;display:flex;flex-direction:column;}
+.cart-panel.open{transform:translateX(0);}
+.cart-head{padding:22px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.cart-head h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;}
+.close-x{background:none;border:none;color:var(--warm);font-size:22px;cursor:pointer;opacity:0.5;transition:opacity 0.2s;}
+.close-x:hover{opacity:1;}
+.cart-items-wrap{flex:1;overflow-y:auto;padding:14px;}
+.cart-item{display:flex;gap:12px;padding:13px;border:1px solid rgba(201,168,76,0.07);margin-bottom:9px;align-items:center;}
+.ci-emoji{font-size:30px;width:46px;text-align:center;flex-shrink:0;}
+.ci-info{flex:1;min-width:0;}
+.ci-name{font-family:'Cormorant Garamond',serif;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-price{font-size:12px;color:var(--gold);margin-top:2px;}
+.ci-qty{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.qty-btn{background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.15);color:var(--gold);width:24px;height:24px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+.qty-btn:hover{background:rgba(201,168,76,0.2);}
+.qty-n{font-size:13px;min-width:20px;text-align:center;}
+.ci-del{background:none;border:none;color:#555;cursor:pointer;font-size:15px;flex-shrink:0;padding:4px;transition:color 0.2s;}
+.ci-del:hover{color:var(--red);}
+.cart-empty-state{text-align:center;padding:60px 20px;opacity:0.35;}
+.cart-empty-state .icon{font-size:48px;margin-bottom:12px;}
+.cart-empty-state p{font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;}
+.cart-foot{padding:18px 22px;border-top:1px solid var(--border);}
+.cart-delivery-note{font-size:10px;opacity:0.4;text-align:center;margin-bottom:12px;letter-spacing:1px;}
+.cart-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.cart-total-row span:first-child{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:0.5;}
+.cart-total-row span:last-child{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);}
+.btn-checkout{width:100%;background:var(--gold);color:var(--dark);border:none;padding:14px;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:600;cursor:pointer;transition:background 0.3s;}
+.btn-checkout:hover{background:var(--gold-light);}
+
+/* ── CHECKOUT PAGE ── */
+#page-checkout{padding-top:80px;background:var(--dark);min-height:100vh;}
+.checkout-wrap{max-width:980px;margin:0 auto;padding:40px 40px 60px;}
+.co-grid{display:grid;grid-template-columns:1fr 360px;gap:36px;}
+.co-form-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;margin-bottom:6px;}
+.co-form-sub{font-size:12px;opacity:0.4;margin-bottom:30px;}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.f-group{margin-bottom:16px;}
+.f-label{display:block;font-size:10px;letter-spacing:3px;text-transform:uppercase;opacity:0.5;margin-bottom:7px;}
+.f-input{width:100%;background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.12);color:var(--warm);padding:12px 14px;font-family:'Montserrat',sans-serif;font-size:12px;outline:none;}
+.f-input:focus{border-color:rgba(201,168,76,0.4);}
+textarea.f-input{resize:vertical;min-height:78px;}
+select.f-input option{background:#1a1a1a;}
+/* Payment options */
+.pay-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px;}
+.pay-opt{border:1px solid rgba(201,168,76,0.15);padding:14px 16px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:12px;}
+.pay-opt:hover,.pay-opt.selected{border-color:var(--gold);background:rgba(201,168,76,0.07);}
+.pay-opt input[type=radio]{accent-color:var(--gold);width:16px;height:16px;}
+.pay-opt-icon{font-size:22px;}
+.pay-opt-name{font-size:12px;font-weight:500;}
+.pay-opt-sub{font-size:10px;opacity:0.45;margin-top:2px;}
+.upi-detail{background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.1);padding:14px 16px;margin-top:10px;display:none;}
+.upi-detail.show{display:block;}
+.upi-id{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);margin-top:4px;}
+/* Order summary box */
+.order-box{background:var(--panel);border:1px solid var(--border);padding:26px;position:sticky;top:84px;align-self:start;}
+.order-box h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.ob-line{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.ob-line-name{font-size:12px;opacity:0.65;}
+.ob-line-price{font-size:12px;color:var(--gold);}
+.ob-divider{border-top:1px solid rgba(201,168,76,0.1);margin:14px 0;}
+.ob-row{display:flex;justify-content:space-between;margin-bottom:8px;}
+.ob-row span:first-child{font-size:11px;opacity:0.4;letter-spacing:1px;}
+.ob-row span:last-child{font-size:13px;}
+.ob-total{display:flex;justify-content:space-between;margin-top:6px;}
+.ob-total span:first-child{font-size:11px;opacity:0.4;letter-spacing:1px;}
+.ob-total span:last-child{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold);}
+.place-order-btn{width:100%;background:var(--gold);color:var(--dark);border:none;padding:15px;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:600;cursor:pointer;margin-top:20px;transition:background 0.3s;}
+.place-order-btn:hover{background:var(--gold-light);}
+
+/* ── MY ORDERS PAGE ── */
+#page-orders{padding-top:80px;min-height:100vh;background:var(--dark);}
+.orders-wrap{max-width:820px;margin:0 auto;padding:48px 40px;}
+.orders-title{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;margin-bottom:6px;}
+.orders-sub{font-size:12px;opacity:0.4;margin-bottom:32px;}
+.my-order-card{background:var(--panel);border:1px solid var(--border);padding:22px;margin-bottom:16px;transition:border-color 0.3s;}
+.my-order-card:hover{border-color:rgba(201,168,76,0.3);}
+.moc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.moc-id{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:0.8;}
+.moc-date{font-size:10px;opacity:0.35;margin-top:3px;}
+.moc-status{font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;}
+.status-pending{background:rgba(201,168,76,0.12);color:var(--gold);}
+.status-processing{background:rgba(76,141,201,0.12);color:#4C8DC9;}
+.status-outfordelivery{background:rgba(255,165,0,0.12);color:orange;}
+.status-delivered{background:rgba(76,175,122,0.12);color:var(--green);}
+.status-cancelled{background:rgba(224,85,85,0.12);color:var(--red);}
+.moc-items{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.moc-chip{background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.1);padding:5px 12px;font-size:11px;}
+.moc-foot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(255,255,255,0.04);}
+.moc-payment{font-size:10px;opacity:0.4;}
+.moc-total{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);}
+.no-orders-state{text-align:center;padding:80px 20px;opacity:0.3;}
+.no-orders-icon{font-size:52px;margin-bottom:14px;}
+.no-orders-txt{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;}
+
+/* ── SUCCESS OVERLAY ── */
+.success-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px;}
+.success-overlay.show{display:flex;}
+.success-anim{font-size:72px;margin-bottom:20px;animation:popIn 0.5s ease;}
+@keyframes popIn{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.success-title{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;color:var(--gold);margin-bottom:10px;}
+.success-order-id{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);opacity:0.7;margin-bottom:16px;}
+.success-msg{font-size:13px;opacity:0.5;line-height:1.9;max-width:400px;margin-bottom:36px;}
+.success-btns{display:flex;gap:14px;}
+
+/* ── FOOTER ── */
+.store-footer{background:#070707;border-top:1px solid rgba(201,168,76,0.08);padding:36px 60px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--gold);}
+.footer-contact{font-size:11px;opacity:0.3;display:flex;flex-direction:column;gap:4px;}
+.footer-copy{font-size:10px;opacity:0.2;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(14px);background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);color:var(--gold);padding:12px 24px;font-size:12px;letter-spacing:1px;z-index:9999;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.18);border-radius:2px;}
+
+@media(max-width:900px){
+  .nav{padding:0 20px;}
+  .nav-links{display:none;}
+  .hero,.section{padding-left:20px;padding-right:20px;}
+  .co-grid{grid-template-columns:1fr;}
+  .f-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-box">
+    <button class="auth-close" onclick="closeAuth()">✕</button>
+    <div class="auth-logo" id="authStoreLogo">Store</div>
+    <div class="auth-sub">Your account</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</button>
+    </div>
+    <!-- LOGIN -->
+    <div class="auth-form active" id="form-login">
+      <div class="a-group"><label class="a-label">Email</label><input class="a-input" id="l_email" type="email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')doCustomerLogin()"/></div>
+      <div class="a-group"><label class="a-label">Password</label><input class="a-input" id="l_pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doCustomerLogin()"/></div>
+      <button class="a-btn" onclick="doCustomerLogin()">Login</button>
+      <div class="a-err" id="login_err"></div>
+    </div>
+    <!-- REGISTER -->
+    <div class="auth-form" id="form-register">
+      <div class="a-group"><label class="a-label">Full Name</label><input class="a-input" id="r_name" placeholder="Your Name"/></div>
+      <div class="a-group"><label class="a-label">Email</label><input class="a-input" id="r_email" type="email" placeholder="you@email.com"/></div>
+      <div class="a-group"><label class="a-label">Phone</label><input class="a-input" id="r_phone" placeholder="+91 98765 43210"/></div>
+      <div class="a-group"><label class="a-label">Password</label><input class="a-input" id="r_pass" type="password" placeholder="Min 6 characters"/></div>
+      <button class="a-btn" onclick="doRegister()">Create Account</button>
+      <div class="a-err" id="reg_err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo" id="navLogo" onclick="goPage('home')">My <span>Store</span></div>
+  <ul class="nav-links">
+    <li><a onclick="goPage('home')">Home</a></li>
+    <li><a onclick="goPage('home');setTimeout(()=>document.getElementById('shopSection').scrollIntoView({behavior:'smooth'}),100)">Shop</a></li>
+    <li><a onclick="requireLogin(()=>goPage('orders'))">My Orders</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="icon-btn" onclick="toggleCart()">🛒<span class="badge" id="cartBadge">0</span></button>
+    <span class="nav-user" id="navUser" style="display:none;"></span>
+    <button class="nav-auth-btn" id="loginBtn" onclick="openAuth('login')">Login / Register</button>
+    <button class="nav-logout" id="logoutBtn" style="display:none;" onclick="doLogout()">Logout</button>
+  </div>
+</nav>
+
+<!-- ══ PAGE: HOME ══ -->
+<div class="page active" id="page-home">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grain"></div>
+    <div class="hero-content">
+      <div class="hero-tag" id="heroTag">Premium Quality</div>
+      <h1 class="hero-title">Welcome to<br><em id="heroName">My Store</em></h1>
+      <p class="hero-sub" id="heroDesc">Discover our curated collection of the finest products, sourced with care and delivered with excellence.</p>
+      <div class="hero-btns">
+        <button class="btn-gold" onclick="document.getElementById('shopSection').scrollIntoView({behavior:'smooth'})">Shop Now</button>
+        <button class="btn-ghost" onclick="requireLogin(()=>goPage('orders'))">My Orders</button>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-num" id="heroProds">0</div><div class="stat-lbl">Products</div></div>
+        <div><div class="stat-num" id="heroOrds">0</div><div class="stat-lbl">Happy Orders</div></div>
+        <div><div class="stat-num">★ 5.0</div><div class="stat-lbl">Rating</div></div>
+      </div>
+    </div>
+  </section>
+  <!-- Marquee -->
+  <div class="marquee-wrap"><div class="marquee-track" id="mqTrack"></div></div>
+  <!-- Shop -->
+  <section class="section sec-dark" id="shopSection">
+    <div class="sec-tag">Fresh Arrivals</div>
+    <h2 class="sec-title">Our <em>Products</em></h2>
+    <p class="sec-sub">Every item freshly listed by our store. Add to cart and order with ease.</p>
+    <div class="cat-wrap" id="catWrap"></div>
+    <div class="prod-grid" id="prodGrid"></div>
+  </section>
+  <!-- Footer -->
+  <footer class="store-footer">
+    <div class="footer-logo" id="footLogo">My Store</div>
+    <div class="footer-contact" id="footContact"></div>
+    <div class="footer-copy">© 2026 All rights reserved.</div>
+  </footer>
+</div>
+
+<!-- ══ PAGE: CHECKOUT ══ -->
+<div class="page" id="page-checkout">
+  <div class="checkout-wrap">
+    <div style="margin-bottom:28px;display:flex;align-items:center;gap:14px;">
+      <button onclick="goPage('home')" style="background:none;border:none;color:var(--gold);font-size:20px;cursor:pointer;opacity:0.7;">←</button>
+      <span style="font-size:11px;letter-spacing:3px;text-transform:uppercase;opacity:0.4;">Back to Store</span>
+    </div>
+    <div class="co-grid">
+      <div>
+        <div class="co-form-title">Delivery Details</div>
+        <div class="co-form-sub">Fill in your details to place the order</div>
+        <div class="f-row">
+          <div class="f-group"><label class="f-label">First Name *</label><input class="f-input" id="co_fname" placeholder="Arjun"/></div>
+          <div class="f-group"><label class="f-label">Last Name</label><input class="f-input" id="co_lname" placeholder="Sharma"/></div>
+        </div>
+        <div class="f-group"><label class="f-label">Phone *</label><input class="f-input" id="co_phone" placeholder="+91 98765 43210"/></div>
+        <div class="f-group"><label class="f-label">Email</label><input class="f-input" id="co_email" placeholder="arjun@email.com" type="email"/></div>
+        <div class="f-group"><label class="f-label">Delivery Address *</label><textarea class="f-input" id="co_addr" placeholder="House/Flat No., Street, Area..."></textarea></div>
+        <div class="f-row">
+          <div class="f-group"><label class="f-label">City</label><input class="f-input" id="co_city" placeholder="Kakinada"/></div>
+          <div class="f-group"><label class="f-label">PIN Code</label><input class="f-input" id="co_pin" placeholder="533001"/></div>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Payment Method *</label>
+          <div class="pay-options">
+            <label class="pay-opt selected" onclick="selectPayment(this,'Cash on Delivery')">
+              <input type="radio" name="payment" value="Cash on Delivery" checked/>
+              <div class="pay-opt-icon">💵</div>
+              <div><div class="pay-opt-name">Cash on Delivery</div><div class="pay-opt-sub">Pay when delivered</div></div>
+            </label>
+            <label class="pay-opt" onclick="selectPayment(this,'Online Payment (UPI)')">
+              <input type="radio" name="payment" value="Online Payment (UPI)"/>
+              <div class="pay-opt-icon">📱</div>
+              <div><div class="pay-opt-name">Online / UPI</div><div class="pay-opt-sub">Pay via UPI / QR</div></div>
+            </label>
+          </div>
+          <div class="upi-detail" id="upiDetail">
+            <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;opacity:0.5;margin-bottom:6px;">Pay to UPI ID</div>
+            <div class="upi-id" id="upiIdDisplay">Scan or copy UPI ID</div>
+            <div style="font-size:10px;opacity:0.35;margin-top:6px;">Complete payment and place order — we'll verify manually.</div>
+          </div>
+        </div>
+        <div class="f-group"><label class="f-label">Special Instructions (Optional)</label><textarea class="f-input" id="co_notes" placeholder="Any notes..."></textarea></div>
+      </div>
+      <div>
+        <div class="order-box">
+          <h3>Your Order</h3>
+          <div id="coItems"></div>
+          <div class="ob-divider"></div>
+          <div class="ob-row"><span>Subtotal</span><span id="coSubtotal"></span></div>
+          <div class="ob-row"><span>Delivery</span><span id="coDelivery"></span></div>
+          <div class="ob-total"><span>Total</span><span id="coTotal"></span></div>
+          <button class="place-order-btn" onclick="placeOrder()">Place Order ✦</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE: MY ORDERS ══ -->
+<div class="page" id="page-orders">
+  <div class="orders-wrap">
+    <div class="orders-title">My <em style="font-style:italic;color:var(--gold);">Orders</em></div>
+    <div class="orders-sub">All your orders in one place</div>
+    <div id="myOrdersList"></div>
+  </div>
+</div>
+
+<!-- CART SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-head"><h3>Your Cart</h3><button class="close-x" onclick="toggleCart()">✕</button></div>
+  <div class="cart-items-wrap" id="cartItemsWrap"></div>
+  <div class="cart-foot">
+    <div class="cart-delivery-note" id="cartDelivNote"></div>
+    <div class="cart-total-row"><span>Total</span><span id="cartTotal">₹0</span></div>
+    <button class="btn-checkout" onclick="goCheckout()">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-anim">✅</div>
+  <div class="success-title">Order Placed!</div>
+  <div class="success-order-id" id="successId"></div>
+  <div class="success-msg">Thank you! Your order has been received and is being prepared. We'll reach out to you shortly on your phone.</div>
+  <div class="success-btns">
+    <button class="btn-gold" onclick="afterOrder()">Continue Shopping</button>
+    <button style="background:none;border:1px solid rgba(201,168,76,0.3);color:var(--gold);padding:14px 28px;font-family:Montserrat,sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;" onclick="viewMyOrders()">View My Orders</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════
+// SHARED STORAGE
+// ═══════════════════════════════
+const STORE_KEY = 'sharedGroceryStore_v2';
+const SESSION_KEY = 'custSession_v2';
+
+function loadStore() {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (raw) return JSON.parse(raw);
+  return { settings:{name:'My Store',tagline:'Fresh. Premium. Yours.',desc:'',phone:'',email:'',address:'',freeDelivery:500,deliveryCharge:50,upi:''}, products:[], orders:[], customers:[] };
+}
+function saveStore(data) { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+function loadSession() { const s = localStorage.getItem(SESSION_KEY); return s ? JSON.parse(s) : null; }
+function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+function clearSession() { localStorage.removeItem(SESSION_KEY); }
+
+let store = loadStore();
+let session = loadSession(); // {id, name, email, phone}
+let cart = JSON.parse(localStorage.getItem('custCart_v2') || '[]');
+let selectedPayment = 'Cash on Delivery';
+
+function persistCart() { localStorage.setItem('custCart_v2', JSON.stringify(cart)); }
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+window.onload = function() {
+  store = loadStore();
+  session = loadSession();
+  renderNav();
+  renderStore();
+  renderCartBadge();
+  setInterval(() => { store = loadStore(); renderProducts(currentCat); renderHeroStats(); }, 8000);
+};
+
+function renderStore() {
+  const s = store.settings;
+  // Nav logo
+  const parts = (s.name||'My Store').split(' ');
+  document.getElementById('navLogo').innerHTML = `${parts[0]} <span>${parts.slice(1).join(' ')}</span>`;
+  document.getElementById('footLogo').textContent = s.name || 'My Store';
+  document.getElementById('heroName').textContent = s.name || 'My Store';
+  document.getElementById('heroTag').textContent = s.tagline || 'Premium Quality';
+  document.getElementById('heroDesc').textContent = s.desc || 'Discover our curated collection of finest products.';
+  document.getElementById('authStoreLogo').textContent = s.name || 'My Store';
+  // Footer
+  const fc = document.getElementById('footContact');
+  fc.innerHTML = [s.phone?'📞 '+s.phone:'', s.email?'✉ '+s.email:'', s.address?'📍 '+s.address:''].filter(Boolean).map(x=>`<span>${x}</span>`).join('');
+  // Marquee
+  const items = [`Free Delivery on Orders Above ₹${s.freeDelivery||500}`, 'Fresh Products Daily', 'Easy Returns & Refunds', 'Premium Quality Guaranteed'];
+  const mq = document.getElementById('mqTrack');
+  mq.innerHTML = [...items,...items].map(i=>`<span class="mq-item">${i}</span>`).join('');
+  renderHeroStats();
+  renderCategories();
+  renderProducts('All');
+}
+
+function renderHeroStats() {
+  store = loadStore();
+  document.getElementById('heroProds').textContent = store.products.length;
+  document.getElementById('heroOrds').textContent = store.orders.length;
+}
+
+// ═══════════════════════════════
+// NAV
+// ═══════════════════════════════
+function renderNav() {
+  if (session) {
+    document.getElementById('navUser').style.display = 'block';
+    document.getElementById('navUser').textContent = session.name.split(' ')[0];
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'block';
+  } else {
+    document.getElementById('navUser').style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'block';
+    document.getElementById('logoutBtn').style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════
+// AUTH
+// ═══════════════════════════════
+function openAuth(tab) { document.getElementById('authOverlay').classList.add('open'); switchAuthTab(tab||'login'); }
+function closeAuth() { document.getElementById('authOverlay').classList.remove('open'); }
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('form-'+tab).classList.add('active');
+  document.getElementById('login_err').textContent='';
+  document.getElementById('reg_err').textContent='';
+}
+
+function doCustomerLogin() {
+  store = loadStore();
+  const email = document.getElementById('l_email').value.trim().toLowerCase();
+  const pass = document.getElementById('l_pass').value.trim();
+  if (!email||!pass) { document.getElementById('login_err').textContent='Fill in all fields.'; return; }
+  const cust = (store.customers||[]).find(c=>c.email.toLowerCase()===email && c.password===pass);
+  if (!cust) { document.getElementById('login_err').textContent='Invalid email or password.'; return; }
+  session = {id:cust.id, name:cust.name, email:cust.email, phone:cust.phone};
+  saveSession(session);
+  closeAuth();
+  renderNav();
+  showToast(`Welcome back, ${cust.name.split(' ')[0]}! ✦`);
+  // Pre-fill checkout
+  document.getElementById('co_fname').value = cust.name.split(' ')[0];
+  document.getElementById('co_lname').value = cust.name.split(' ').slice(1).join(' ');
+  document.getElementById('co_phone').value = cust.phone;
+  document.getElementById('co_email').value = cust.email;
+}
+
+function doRegister() {
+  store = loadStore();
+  const name = document.getElementById('r_name').value.trim();
+  const email = document.getElementById('r_email').value.trim().toLowerCase();
+  const phone = document.getElementById('r_phone').value.trim();
+  const pass = document.getElementById('r_pass').value.trim();
+  if (!name||!email||!phone||!pass) { document.getElementById('reg_err').textContent='All fields are required.'; return; }
+  if (pass.length < 6) { document.getElementById('reg_err').textContent='Password must be at least 6 characters.'; return; }
+  if (!store.customers) store.customers = [];
+  if (store.customers.find(c=>c.email.toLowerCase()===email)) { document.getElementById('reg_err').textContent='Email already registered.'; return; }
+  const cust = { id:'cust_'+Date.now(), name, email, phone, password:pass, joined:new Date().toLocaleDateString('en-IN') };
+  store.customers.push(cust);
+  saveStore(store);
+  session = {id:cust.id, name:cust.name, email:cust.email, phone:cust.phone};
+  saveSession(session);
+  closeAuth();
+  renderNav();
+  showToast(`Welcome, ${name.split(' ')[0]}! Account created ✦`);
+  document.getElementById('co_fname').value = name.split(' ')[0];
+  document.getElementById('co_lname').value = name.split(' ').slice(1).join(' ');
+  document.getElementById('co_phone').value = phone;
+  document.getElementById('co_email').value = email;
+}
+
+function doLogout() {
+  clearSession();
+  session = null;
+  renderNav();
+  goPage('home');
+  showToast('Logged out.');
+}
+
+function requireLogin(cb) {
+  if (session) { cb(); }
+  else { openAuth('login'); showToast('Please login to continue.'); }
+}
+
+// ═══════════════════════════════
+// PAGES
+// ═══════════════════════════════
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  window.scrollTo(0,0);
+  if (name==='orders') renderMyOrders();
+  if (name==='checkout') renderCheckoutPage();
+}
+
+// ═══════════════════════════════
+// PRODUCTS
+// ═══════════════════════════════
+let currentCat = 'All';
+
+function renderCategories() {
+  store = loadStore();
+  const cats = ['All', ...new Set(store.products.map(p=>p.cat))];
+  document.getElementById('catWrap').innerHTML = cats.map(c=>`<button class="cat-chip${c==='All'?' active':''}" onclick="filterByCat('${c}',this)">${c}</button>`).join('');
+}
+
+function filterByCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProducts(cat);
+}
+
+function renderProducts(filter) {
+  store = loadStore();
+  const prods = filter==='All' ? store.products : store.products.filter(p=>p.cat===filter);
+  const grid = document.getElementById('prodGrid');
+  if (!prods.length) {
+    grid.innerHTML = `<div class="empty-prods"><div class="empty-prods-icon">${store.products.length?'🔍':'🏪'}</div><div class="empty-prods-txt">${store.products.length?'No products in this category.':'Store is setting up. Check back soon!'}</div></div>`;
+    return;
+  }
+  grid.innerHTML = prods.map(p => `
+    <div class="prod-card">
+      <div class="prod-img">
+        ${p.emoji||'🛒'}
+        ${p.badge?`<div class="prod-badge">${p.badge}</div>`:''}
+        ${p.stock==='out'?'<div class="prod-out-overlay">Out of Stock</div>':''}
+      </div>
+      <div class="prod-body">
+        <div class="prod-origin">${p.origin||p.cat}</div>
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-desc">${p.desc||''}</div>
+        <div class="prod-foot">
+          <div class="prod-price">₹${p.price}<small>/${p.unit||'item'}</small></div>
+          ${p.stock!=='out'
+            ? `<button class="prod-add-btn" onclick="addToCart('${p.id}')">+</button>`
+            : `<span style="font-size:10px;opacity:0.35;">Unavailable</span>`}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════
+// CART
+// ═══════════════════════════════
+function addToCart(id) {
+  store = loadStore();
+  const prod = store.products.find(p=>p.id===id);
+  if (!prod) return;
+  const existing = cart.find(c=>c.id===id);
+  if (existing) existing.qty++;
+  else cart.push({id, name:prod.name, price:Number(prod.price), emoji:prod.emoji||'🛒', unit:prod.unit||'item', qty:1});
+  persistCart();
+  renderCartBadge();
+  renderCartPanel();
+  showToast(`${prod.emoji||'✦'} ${prod.name} added to cart`);
+  // Open cart briefly
+  document.getElementById('cartOverlay').classList.add('open');
+  document.getElementById('cartPanel').classList.add('open');
+}
+
+function renderCartBadge() {
+  document.getElementById('cartBadge').textContent = cart.reduce((a,c)=>a+c.qty,0);
+}
+
+function renderCartPanel() {
+  const wrap = document.getElementById('cartItemsWrap');
+  if (!cart.length) {
+    wrap.innerHTML = `<div class="cart-empty-state"><div class="icon">🛒</div><p>Your cart is empty</p></div>`;
+    document.getElementById('cartTotal').textContent = '₹0';
+    document.getElementById('cartDelivNote').textContent = '';
+    return;
+  }
+  wrap.innerHTML = cart.map(c=>`
+    <div class="cart-item">
+      <div class="ci-emoji">${c.emoji}</div>
+      <div class="ci-info">
+        <div class="ci-name">${c.name}</div>
+        <div class="ci-price">₹${c.price} / ${c.unit}</div>
+        <div class="ci-qty">
+          <button class="qty-btn" onclick="changeQty('${c.id}',-1)">−</button>
+          <span class="qty-n">${c.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${c.id}',1)">+</button>
+        </div>
+      </div>
+      <button class="ci-del" onclick="removeFromCart('${c.id}')">🗑</button>
+    </div>`).join('');
+  const subtotal = cart.reduce((a,c)=>a+(c.price*c.qty),0);
+  store = loadStore();
+  const fd = store.settings.freeDelivery||500;
+  const dc = store.settings.deliveryCharge||50;
+  const delivery = subtotal >= fd ? 0 : dc;
+  document.getElementById('cartTotal').textContent = `₹${(subtotal+delivery).toLocaleString('en-IN')}`;
+  document.getElementById('cartDelivNote').textContent = subtotal>=fd ? '🎉 Free delivery applied!' : `Add ₹${fd-subtotal} more for free delivery`;
+}
+
+function changeQty(id, d) {
+  const item = cart.find(c=>c.id===id);
+  if (!item) return;
+  item.qty += d;
+  if (item.qty <= 0) cart = cart.filter(c=>c.id!==id);
+  persistCart();
+  renderCartBadge();
+  renderCartPanel();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c=>c.id!==id);
+  persistCart();
+  renderCartBadge();
+  renderCartPanel();
+}
+
+function toggleCart() {
+  document.getElementById('cartOverlay').classList.toggle('open');
+  document.getElementById('cartPanel').classList.toggle('open');
+  renderCartPanel();
+}
+
+function goCheckout() {
+  if (!cart.length) { showToast('Your cart is empty!'); return; }
+  if (!session) { openAuth('login'); showToast('Please login to place order.'); return; }
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.getElementById('cartPanel').classList.remove('open');
+  goPage('checkout');
+}
+
+// ═══════════════════════════════
+// CHECKOUT
+// ═══════════════════════════════
+function renderCheckoutPage() {
+  store = loadStore();
+  if (session) {
+    document.getElementById('co_fname').value = session.name.split(' ')[0] || '';
+    document.getElementById('co_lname').value = session.name.split(' ').slice(1).join(' ') || '';
+    document.getElementById('co_phone').value = session.phone || '';
+    document.getElementById('co_email').value = session.email || '';
+  }
+  const items = document.getElementById('coItems');
+  items.innerHTML = cart.map(c=>`<div class="ob-line"><span class="ob-line-name">${c.emoji} ${c.name} × ${c.qty}</span><span class="ob-line-price">₹${c.price*c.qty}</span></div>`).join('');
+  const subtotal = cart.reduce((a,c)=>a+(c.price*c.qty),0);
+  const fd = store.settings.freeDelivery||500;
+  const dc = store.settings.deliveryCharge||50;
+  const delivery = subtotal >= fd ? 0 : dc;
+  document.getElementById('coSubtotal').textContent = `₹${subtotal}`;
+  document.getElementById('coDelivery').textContent = delivery===0 ? 'FREE 🎉' : `₹${delivery}`;
+  document.getElementById('coTotal').textContent = `₹${subtotal+delivery}`;
+  // UPI
+  document.getElementById('upiIdDisplay').textContent = store.settings.upi || 'Contact store for UPI details';
+}
+
+function selectPayment(el, val) {
+  document.querySelectorAll('.pay-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPayment = val;
+  document.getElementById('upiDetail').classList.toggle('show', val.includes('UPI'));
+}
+
+function placeOrder() {
+  const fname = document.getElementById('co_fname').value.trim();
+  const phone = document.getElementById('co_phone').value.trim();
+  const addr = document.getElementById('co_addr').value.trim();
+  if (!fname||!phone||!addr) { showToast('Please fill Name, Phone and Address.'); return; }
+  if (!cart.length) { showToast('Cart is empty!'); return; }
+  store = loadStore();
+  const fd = store.settings.freeDelivery||500;
+  const dc = store.settings.deliveryCharge||50;
+  const subtotal = cart.reduce((a,c)=>a+(c.price*c.qty),0);
+  const delivery = subtotal>=fd ? 0 : dc;
+  const orderId = 'ORD-' + Date.now().toString().slice(-7);
+  const order = {
+    id: orderId,
+    customerId: session ? session.id : null,
+    customerEmail: session ? session.email : document.getElementById('co_email').value,
+    date: new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    customer: `${fname} ${document.getElementById('co_lname').value}`.trim(),
+    phone: phone,
+    email: document.getElementById('co_email').value,
+    address: `${addr}, ${document.getElementById('co_city').value}, ${document.getElementById('co_pin').value}`.replace(/, ,/g,',').replace(/,\s*$/,''),
+    payment: selectedPayment,
+    notes: document.getElementById('co_notes').value,
+    items: cart.map(c=>({...c})),
+    subtotal, delivery, total: subtotal+delivery,
+    status: 'Pending'
+  };
+  store.orders.unshift(order);
+  saveStore(store);
+  // Clear cart
+  cart = [];
+  persistCart();
+  renderCartBadge();
+  // Show success
+  document.getElementById('successId').textContent = `Order ID: ${orderId}`;
+  document.getElementById('successOverlay').classList.add('show');
+}
+
+function afterOrder() {
+  document.getElementById('successOverlay').classList.remove('show');
+  goPage('home');
+}
+
+function viewMyOrders() {
+  document.getElementById('successOverlay').classList.remove('show');
+  if (session) goPage('orders');
+  else { goPage('home'); openAuth('login'); }
+}
+
+// ═══════════════════════════════
+// MY ORDERS
+// ═══════════════════════════════
+function renderMyOrders() {
+  if (!session) { openAuth('login'); return; }
+  store = loadStore();
+  const myOrders = store.orders.filter(o => o.customerId===session.id || o.customerEmail===session.email);
+  const wrap = document.getElementById('myOrdersList');
+  if (!myOrders.length) {
+    wrap.innerHTML = `<div class="no-orders-state"><div class="no-orders-icon">🛍</div><div class="no-orders-txt">You haven't placed any orders yet.</div><br><button class="btn-gold" style="margin-top:16px;" onclick="goPage('home')">Start Shopping</button></div>`;
+    return;
+  }
+  wrap.innerHTML = myOrders.map(o => {
+    const cls = 'status-'+o.status.toLowerCase().replace(/ /g,'');
+    return `<div class="my-order-card">
+      <div class="moc-head">
+        <div><div class="moc-id">${o.id}</div><div class="moc-date">🕐 ${o.date}</div></div>
+        <div class="moc-status ${cls}">${o.status}</div>
+      </div>
+      <div class="moc-items">${o.items.map(i=>`<div class="moc-chip">${i.emoji||''} ${i.name} × ${i.qty}</div>`).join('')}</div>
+      <div class="moc-foot">
+        <div>
+          <div class="moc-payment">💳 ${o.payment}</div>
+          <div style="font-size:10px;opacity:0.35;margin-top:3px;">📍 ${o.address}</div>
+        </div>
+        <div class="moc-total">₹${o.total.toLocaleString('en-IN')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════
+// TOAST
+// ═══════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>
